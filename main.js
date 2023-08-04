@@ -1,65 +1,68 @@
-class ProductManager {
-    constructor() {
-        this.products = []
-    }
+import { promises as fs } from 'fs'
 
-    addProduct(product) {
-        const prod = this.products.find(prod => prod.code === product.code)
+const path = './productos.json'
 
-        if (prod) {
-            console.log("Articulo ya encontrado")
-        } else {
-            this.products.push(product)
-        }
-    }
-
-    getProducts() {
-        console.log(this.products)
-    }
-
-    getProductById(id) {
-        const prod = this.products.find(prod => prod.id === id)
-
-        if (prod) {
-            console.log(prod)
-        } else {
-            console.log("Articulo no encontrado")
-        }
-    }
+const getProducts = async () => {
+    const prods = JSON.parse(await fs.readFile(path, 'utf-8'))
+    console.log(prods)
 }
 
-class Product {
-    constructor(title, description, price, code, stock, thumbnail) {
-        this.title = title
-        this.description = description
-        this.price = price
-        this.code = code
-        this.stock = stock
-        this.thumbnail = thumbnail
-        this.id = Product.incrementarId() 
-    }
-    
-    static incrementarId() {
-        
-        if (this.idIncrement) {
-            this.idIncrement++
-        } else {
-            this.idIncrement = 1
-        }
-        return this.idIncrement
-    }
+const getProductById = async (id) => {
+    const prods = JSON.parse(await fs.readFile(path, 'utf-8'))
+    const producto = prods.find(prod => prod.id === id)
+
+    if (producto)
+        console.log(producto)
+    else
+        console.log("Producto no encontrado")
+
 }
 
-const producto1 = new Product("Shampoo Elvive", "Aminoacidos", 3000, "SH001", 200, [])
-const producto2 = new Product("Shampoo Dove", "Nutritivo con Argan", 5600, "SH002", 80, [])
-const producto3 = new Product("Crema Facial", "Probioticos", 6500, "CR001", 120, [])
+const addProduct = async (product) => {
+    const prods = JSON.parse(await fs.readFile(path, 'utf-8'))
+    const producto = prods.find(prod => prod.id === product.id)
 
-const productManager = new ProductManager()
+    if (producto) {
+        console.log("Producto ya agregado")
+    } else {
+        prods.push(product)
+        //Para modificar un array, debo pisar el anterior contenido
+        await fs.writeFile(path, JSON.stringify(prods))
+    }
 
-productManager.addProduct(producto1)
-productManager.addProduct(producto2)
-productManager.addProduct(producto3)
+}
 
-productManager.getProducts()
+const updateProduct = async (id, product) => {
+    const prods = JSON.parse(await fs.readFile(path, 'utf-8'))
+    const indice = prods.findIndex(prod => prod.id === id)
+    //0   1   2
+    //[{}, {}, {}]
+    if (indice != -1) {
+        prods[indice].nombre = product.nombre
+        //Resto de las propiedades
+        await fs.writeFile(path, JSON.stringify(prods))
+    } else {
+        console.log("Producto no encontrado")
+    }
 
-productManager.getProductById(2)
+}
+
+const deleteProduct = async (id) => {
+    const prods = JSON.parse(await fs.readFile(path, 'utf-8'))
+    const producto = prods.find(prod => prod.id === id)
+
+    if (producto) {
+        await fs.writeFile(path, JSON.stringify(prods.filter(prod => prod.id != id)))
+    } else {
+        console.log("Producto no encontrado")
+    }
+
+}
+
+const product1 = {nombre: "Shampoo Elvive", descri: "Aminoacidos", precio: 3000, id: "SH001", stk: 200, foto: []}
+const product2 = {nombre: "Shampoo Dove", descri: "Nutritivo con Argan", precio: 5600, id: "SH002", stk: 80, foto: []}
+const product3 = {nombre: "Crema Facial", descri: "Probioticos", precio: 6500, id: "CR001", stk: 120, foto: []}
+
+//updateProduct(4, { nombre: "Pan" })
+//deleteProduct(2)
+getProducts()
